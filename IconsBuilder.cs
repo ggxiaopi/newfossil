@@ -16,8 +16,8 @@ namespace IconsBuilder
 {
     public class IconsBuilder : BaseSettingsPlugin<IconsBuilderSettings>
     {
-        private const string ALERT_CONFIG = "config\\new_mod_alerts.txt";
-        private const string IGNORE_FILE = "IgnoredEntities.txt";
+        private string ALERT_CONFIG => Path.Combine(DirectoryFullName, "config", "mod_alerts.txt");
+        private string IGNORE_FILE => Path.Combine(DirectoryFullName, "config", "ignored_entities.txt");
         private List<string> IgnoredSum;
 
         private readonly EntityType[] Chests =
@@ -53,6 +53,10 @@ namespace IconsBuilder
 
         private void LoadConfig()
         {
+            if (!File.Exists(ALERT_CONFIG))
+            {
+                DebugWindow.LogError($"IconBuilder -> ALERT_CONFIG file not found: {ALERT_CONFIG}");
+            }
             var readAllLines = File.ReadAllLines(ALERT_CONFIG);
 
             foreach (var readAllLine in readAllLines)
@@ -65,8 +69,7 @@ namespace IconsBuilder
         }
         private void CreateIgnoreFile()
         {
-            var path = $"{DirectoryFullName}\\{IGNORE_FILE}";
-            if (File.Exists(path)) return;
+            if (File.Exists(IGNORE_FILE)) return;
             var defaultConfig =
             #region default Config
                 "#default ignores\n" +
@@ -84,7 +87,7 @@ namespace IconsBuilder
                 "Metadata/Monsters/InvisibleFire/InvisibleFireAfflictionDemonColdDegenUnique\n" +
                 "Metadata/Monsters/AtlasExiles/CrusaderInfluenceMonsters/CrusaderArcaneRune";
             #endregion
-            using (var streamWriter = new StreamWriter(path, true))
+            using (var streamWriter = new StreamWriter(IGNORE_FILE, true))
             {
                 streamWriter.Write(defaultConfig);
                 streamWriter.Close();
@@ -92,10 +95,9 @@ namespace IconsBuilder
         }
         private void ReadIgnoreFile()
         {
-            var path = $"{DirectoryFullName}\\{IGNORE_FILE}";
-            if (File.Exists(path))
+            if (File.Exists(IGNORE_FILE))
             {
-                var text = File.ReadAllLines(path).Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#")).ToList();
+                var text = File.ReadAllLines(IGNORE_FILE).Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#")).ToList();
                 IgnoredSum = ignoreEntites.Concat(text).ToList();
             }
             else
