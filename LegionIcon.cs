@@ -110,6 +110,14 @@ namespace IconsBuilder
 
                 var statDictionary = Entity.Stats;
 
+                if (statDictionary == null)
+                {
+                    Show = () => Entity.GetComponent<Life>().HPPercentage > 0.02;
+                    return;
+                }
+
+                // stats are broken for legion monsters (3.11) therefore the further code will most likely not be hit
+
                 if (statDictionary.Count == 0)
                 {
                     statDictionary = entity.GetComponentFromMemory<Stats>().ParseStats();
