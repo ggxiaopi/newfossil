@@ -23,6 +23,9 @@ namespace IconsBuilder
 
         public void Update(Entity entity, IconsBuilderSettings settings)
         {
+	        const string heistPrefix = "Metadata/Chests/LeagueHeist/";
+
+
             if (Entity.Path.Contains("BreachChest"))
                 CType = ChestType.Breach;
             else if (Entity.Path.Contains("Metadata/Chests/AbyssChest") ||
@@ -45,12 +48,14 @@ namespace IconsBuilder
                 CType = ChestType.Synthesis;
             else if (Entity.League == LeagueType.Legion)
                 CType = ChestType.Legion;
+            else if (Entity.Path.StartsWith(heistPrefix, StringComparison.Ordinal))
+                CType = ChestType.Heist;
             else
                 CType = ChestType.SmallChest;
 
             Show = () => !Entity.IsOpened;
 
-            if (!_HasIngameIcon)
+            if (!_HasIngameIcon || CType == ChestType.Heist)
                 MainTexture = new HudTexture {FileName = "sprites.png"};
             else
             {
@@ -370,7 +375,39 @@ namespace IconsBuilder
 
                     Text = ((MapIconsIndex) minimapIconIndex).ToString().Replace("Legion", "");
                     MainTexture.Color = Color.White;
+
                     break;
+                case ChestType.Heist:
+                    {
+                        Text = Entity.Path.Substring(heistPrefix.Length).Trim();
+                        if (!Text.Contains("Secondary"))        // none-secondary chests already have an icon
+                        {
+	                        Text = string.Empty;
+                            break;
+                        }
+
+                        for (MapIconsIndex rewardIconIndex = MapIconsIndex.RewardAbyss; rewardIconIndex <= MapIconsIndex.RewardWeapons; rewardIconIndex++)
+                        {
+                            var indexName = Enum.GetName(typeof(MapIconsIndex), rewardIconIndex);
+                            System.Diagnostics.Debug.Assert(indexName != null && indexName.StartsWith("Reward"));
+                            if (Text.Contains(indexName.Substring("Reward".Length)))
+                            {
+                                MainTexture.FileName = "Icons.png";
+                                MainTexture.UV = SpriteHelper.GetUV(rewardIconIndex);
+                                goto done;
+                            }
+                        }
+                        Logger.Log.Warning("Missing icon handling for {0}", Text);
+
+                    done: { }
+
+                        Priority = IconPriority.Critical;
+                        MainTexture.Size = settings.SizeHeistChestIcon;
+                        MainTexture.Color = Color.White;
+                        _HasIngameIcon = false; // override
+                        Text = string.Empty;
+                        break;
+                    }
                 default:
                     throw new ArgumentOutOfRangeException("Chest type not found.");
             }
