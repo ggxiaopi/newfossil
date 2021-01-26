@@ -18,28 +18,11 @@ namespace IconsBuilder
     {
         private string ALERT_CONFIG => Path.Combine(DirectoryFullName, "config", "mod_alerts.txt");
         private string IGNORE_FILE => Path.Combine(DirectoryFullName, "config", "ignored_entities.txt");
-        private List<string> IgnoredSum;
+        private List<string> IgnoredEntities { get; set; }
 
         private readonly EntityType[] Chests =
         {
             EntityType.Chest, EntityType.SmallChest
-        };
-
-        private readonly List<string> ignoreEntites = new List<string>
-        {
-            "Metadata/Monsters/Frog/FrogGod/SilverPool",
-            "Metadata/MiscellaneousObjects/WorldItem",
-            "Metadata/Pet/Weta/Basic",
-            "Metadata/Monsters/Daemon/SilverPoolChillDaemon",
-            "Metadata/Monsters/Daemon",
-            "Metadata/Monsters/Frog/FrogGod/SilverOrbFromMonsters",
-            "Metadata/Terrain/Labyrinth/Objects/Puzzle_Parts/TimerGears",
-            "Metadata/Chests/DelveChests/DelveAzuriteVeinEncounter",
-            "Metadata/Chests/DelveChests/DelveAzuriteVeinEncounterNoDrops",
-            //delirium Ignores
-            "Metadata/Monsters/InvisibleFire/InvisibleFireAfflictionCorpseDegen",
-            "Metadata/Monsters/InvisibleFire/InvisibleFireAfflictionDemonColdDegenUnique",
-            "Metadata/Monsters/AtlasExiles/CrusaderInfluenceMonsters/CrusaderArcaneRune"
         };
 
         private readonly Dictionary<string, Size2> modIcons = new Dictionary<string, Size2>();
@@ -67,41 +50,17 @@ namespace IconsBuilder
                 modIcons[s[0]] = new Size2(int.Parse(sz[0]), int.Parse(sz[1]));
             }
         }
-        private void CreateIgnoreFile()
-        {
-            if (File.Exists(IGNORE_FILE)) return;
-            var defaultConfig =
-            #region default Config
-                "#default ignores\n" +
-                "Metadata/Monsters/Frog/FrogGod/SilverPool\n" +
-                "Metadata/MiscellaneousObjects/WorldItem\n" +
-                "Metadata/Pet/Weta/Basic\n" +
-                "Metadata/Monsters/Daemon/SilverPoolChillDaemon\n" +
-                "Metadata/Monsters/Daemon\n" +
-                "Metadata/Monsters/Frog/FrogGod/SilverOrbFromMonsters\n" +
-                "Metadata/Terrain/Labyrinth/Objects/Puzzle_Parts/TimerGears\n" +
-                "Metadata/Chests/DelveChests/DelveAzuriteVeinEncounter\n" +
-                "Metadata/Chests/DelveChests/DelveAzuriteVeinEncounterNoDrops\n" +
-                "#Delirium Ignores\n" +
-                "Metadata/Monsters/InvisibleFire/InvisibleFireAfflictionCorpseDegen\n" +
-                "Metadata/Monsters/InvisibleFire/InvisibleFireAfflictionDemonColdDegenUnique\n" +
-                "Metadata/Monsters/AtlasExiles/CrusaderInfluenceMonsters/CrusaderArcaneRune";
-            #endregion
-            using (var streamWriter = new StreamWriter(IGNORE_FILE, true))
-            {
-                streamWriter.Write(defaultConfig);
-                streamWriter.Close();
-            }
-        }
         private void ReadIgnoreFile()
         {
-            if (File.Exists(IGNORE_FILE))
+            var path = Path.Combine(DirectoryFullName, IGNORE_FILE);
+            if (File.Exists(path))
             {
-                var text = File.ReadAllLines(IGNORE_FILE).Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#")).ToList();
-                IgnoredSum = ignoreEntites.Concat(text).ToList();
+                IgnoredEntities = File.ReadAllLines(path).Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#")).ToList();
             }
             else
-                CreateIgnoreFile();
+            {
+                LogError($"Ignored entities file does not exist. Path: {path}");
+            }
         }
 
         public override void OnLoad()
@@ -191,7 +150,7 @@ namespace IconsBuilder
         private bool SkipEntity(Entity entity)
         {
             if (entity.Type == EntityType.Daemon) return true;
-            if (ignoreEntites.AnyF(x => entity.Path.Contains(x))) return true;
+            if (IgnoredEntities.AnyF(x => entity.Path.Contains(x))) return true;
             return false;
         }
 
