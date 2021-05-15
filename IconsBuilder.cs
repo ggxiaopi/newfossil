@@ -29,7 +29,7 @@ namespace IconsBuilder
 
         private readonly EntityType[] SkippedEntity =
         {
-            EntityType.WorldItem, EntityType.HideoutDecoration, EntityType.Effect, EntityType.Light, EntityType.ServerObject
+            EntityType.WorldItem, EntityType.HideoutDecoration, EntityType.Effect, EntityType.Light, EntityType.ServerObject, EntityType.Daemon
         };
 
         private Queue<Entity> _entities = new Queue<Entity>(128);
@@ -123,9 +123,8 @@ namespace IconsBuilder
         {
             if (entity == null) return true;
             if (!entity.IsValid) return true;
-            if (entity.Type == EntityType.Daemon) return true;
-            if (SkippedEntity?.AnyF(x => x == entity.Type) != false) return true;
-            if (IgnoredEntities?.AnyF(x => entity.Path.Contains(x)) != false) return true;
+            if (SkippedEntity.AnyF(x => x == entity.Type)) return true;
+            if (IgnoredEntities.AnyF(x => entity?.Path?.Contains(x) == true)) return true;
 
             return false;
         }
