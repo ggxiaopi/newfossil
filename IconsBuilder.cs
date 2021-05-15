@@ -124,8 +124,8 @@ namespace IconsBuilder
             if (entity == null) return true;
             if (!entity.IsValid) return true;
             if (entity.Type == EntityType.Daemon) return true;
-            if (SkippedEntity.AnyF(x => x == entity.Type)) return true;
-            if (IgnoredEntities.AnyF(x => entity.Path.Contains(x))) return true;
+            if (SkippedEntity?.AnyF(x => x == entity.Type) != false) return true;
+            if (IgnoredEntities?.AnyF(x => entity.Path.Contains(x)) != false) return true;
 
             return false;
         }
