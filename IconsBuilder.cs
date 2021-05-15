@@ -79,16 +79,8 @@ namespace IconsBuilder
             _addedIcon.Enqueue(entity);
         }
 
-        //Probably now outdated, need more tests 
-        private IEnumerator FixIcons()
-        {
-            yield return new WaitTime(1000);
-            _addedIcon = new Queue<Entity>(GameController.Entities.Where(x => x.IsValid));
-        }
-
         public override void AreaChange(AreaInstance area)
         {
-            Core.MainRunner.Run(new Coroutine(FixIcons(), this, "Fix map icons"));
             ReadIgnoreFile();
         }
 
