@@ -32,7 +32,7 @@ namespace IconsBuilder
             EntityType.WorldItem, EntityType.HideoutDecoration, EntityType.Effect, EntityType.Light, EntityType.ServerObject
         };
 
-        private Queue<Entity> _addedIcon = new Queue<Entity>(128);
+        private Queue<Entity> _entities = new Queue<Entity>(128);
 
         private void LoadConfig()
         {
@@ -71,12 +71,8 @@ namespace IconsBuilder
         public override void EntityAdded(Entity entity)
         {
             if (!Settings.Enable.Value) return;
-            if (entity == null) return;
-            if (!entity.IsValid) return;
-            if (entity.Type == EntityType.Daemon) return;
-            if (SkippedEntity.AnyF(x => x == entity.Type)) return;
-            if (IgnoredEntities.AnyF(x => entity.Path.Contains(x))) return;
-            _addedIcon.Enqueue(entity);
+
+            _entities.Enqueue(entity);
         }
 
         public override void AreaChange(AreaInstance area)
@@ -86,19 +82,8 @@ namespace IconsBuilder
 
         public override bool Initialise()
         {
-            LoadConfig();
-            
-
-            Settings.Reparse.OnPressed += () =>
-            {
-                foreach (var entity in GameController.EntityListWrapper.Entities)
-                {
-                    if (!entity.IsValid) continue;
-                    EntityAdded(entity);
-                }
-            };
+            LoadConfig();           
             ReadIgnoreFile();
-
             return true;
         }
 
@@ -106,7 +91,7 @@ namespace IconsBuilder
         {
             if (!Settings.Enable.Value) return null;
 
-            if (Settings.MultiThreading && _addedIcon.Count >= Settings.MultiThreadingWhenEntityMoreThan)
+            if (Settings.MultiThreading && _entities.Count >= Settings.MultiThreadingWhenEntityMoreThan)
                 return GameController.MultiThreadManager.AddJob(TickLogic, nameof(IconsBuilder));
 
             TickLogic();
@@ -115,15 +100,17 @@ namespace IconsBuilder
 
         private void TickLogic()
         {
-            while (_addedIcon.Count > 0)
+            while (_entities.Count > 0)
             {
                 try
                 {
-                    var dequeue = _addedIcon.Dequeue();
-                    var entityAddedLogic = EntityAddedLogic(dequeue);
+                    var entity = _entities.Dequeue();
+                    if (SkipIcon(entity)) continue;
 
-                    if (entityAddedLogic != null)
-                        dequeue.SetHudComponent(entityAddedLogic);
+                    var icon = GenerateIcon(entity);
+                    if (icon == null) continue;
+                    
+                    entity.SetHudComponent(icon);
                 }
                 catch (Exception ex)
                 {
@@ -132,7 +119,18 @@ namespace IconsBuilder
             }
         }
 
-        private BaseIcon EntityAddedLogic(Entity entity)
+        private bool SkipIcon(Entity entity)
+        {
+            if (entity == null) return true;
+            if (!entity.IsValid) return true;
+            if (entity.Type == EntityType.Daemon) return true;
+            if (SkippedEntity.AnyF(x => x == entity.Type)) return true;
+            if (IgnoredEntities.AnyF(x => entity.Path.Contains(x))) return true;
+
+            return false;
+        }
+
+        private BaseIcon GenerateIcon(Entity entity)
         {
             //Monsters
             if (entity.Type == EntityType.Monster)
