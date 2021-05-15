@@ -68,22 +68,15 @@ namespace IconsBuilder
             Graphics.InitImage("sprites.png");
         }
 
-        public override void EntityIgnored(Entity Entity)
+        public override void EntityAdded(Entity entity)
         {
             if (!Settings.Enable.Value) return;
-        }
-
-        public override void EntityRemoved(Entity Entity)
-        {
-            if (!Settings.Enable.Value) return;
-            if (Entity.Type == EntityType.Effect) return;
-        }
-
-        public override void EntityAdded(Entity Entity)
-        {
-            if (!Settings.Enable.Value) return;
-            if (SkippedEntity.Any(x => x == Entity.Type)) return;
-            _addedIcon.Enqueue(Entity);
+            if (entity == null) return;
+            if (!entity.IsValid) return;
+            if (entity.Type == EntityType.Daemon) return;
+            if (SkippedEntity.AnyF(x => x == entity.Type)) return;
+            if (IgnoredEntities.AnyF(x => entity.Path.Contains(x))) return;
+            _addedIcon.Enqueue(entity);
         }
 
         //Probably now outdated, need more tests 
@@ -147,17 +140,8 @@ namespace IconsBuilder
             }
         }
 
-        private bool SkipEntity(Entity entity)
-        {
-            if (entity.Type == EntityType.Daemon) return true;
-            if (IgnoredEntities.AnyF(x => entity.Path.Contains(x))) return true;
-            return false;
-        }
-
         private BaseIcon EntityAddedLogic(Entity entity)
         {
-            if (SkipEntity(entity)) return null;
-
             //Monsters
             if (entity.Type == EntityType.Monster)
             {
