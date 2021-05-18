@@ -29,7 +29,13 @@ namespace IconsBuilder
 
         private readonly EntityType[] SkippedEntity =
         {
-            EntityType.WorldItem, EntityType.HideoutDecoration, EntityType.Effect, EntityType.Light, EntityType.ServerObject, EntityType.Daemon
+            EntityType.WorldItem, 
+            EntityType.HideoutDecoration, 
+            EntityType.Effect, 
+            EntityType.Light, 
+            EntityType.ServerObject, 
+            EntityType.Daemon,
+            EntityType.Error
         };
 
         private Queue<Entity> _entities = new Queue<Entity>(128);
