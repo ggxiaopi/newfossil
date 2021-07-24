@@ -38,7 +38,7 @@ namespace IconsBuilder
             EntityType.Error
         };
 
-        private Queue<Entity> _entities = new Queue<Entity>(128);
+        private int RunCounter { get; set; } = 0;
 
         private void LoadConfig()
         {
@@ -74,13 +74,6 @@ namespace IconsBuilder
             Graphics.InitImage("sprites.png");
         }
 
-        public override void EntityAdded(Entity entity)
-        {
-            if (!Settings.Enable.Value) return;
-
-            _entities.Enqueue(entity);
-        }
-
         public override void AreaChange(AreaInstance area)
         {
             ReadIgnoreFile();
@@ -96,9 +89,8 @@ namespace IconsBuilder
         public override Job Tick()
         {
             if (!Settings.Enable.Value) return null;
-
-            if (Settings.MultiThreading && _entities.Count >= Settings.MultiThreadingWhenEntityMoreThan)
-                return GameController.MultiThreadManager.AddJob(TickLogic, nameof(IconsBuilder));
+            RunCounter++;
+            if (RunCounter % Settings.RunEveryXTicks.Value != 0) return null;
 
             TickLogic();
             return null;
@@ -106,22 +98,15 @@ namespace IconsBuilder
 
         private void TickLogic()
         {
-            while (_entities.Count > 0)
+            foreach (var entity in GameController.Entities)
             {
-                try
-                {
-                    var entity = _entities.Dequeue();
-                    if (SkipIcon(entity)) continue;
+                if (entity.GetHudComponent<BaseIcon>() != null) continue;
+                if (SkipIcon(entity)) continue;
 
-                    var icon = GenerateIcon(entity);
-                    if (icon == null) continue;
-                    
-                    entity.SetHudComponent(icon);
-                }
-                catch (Exception ex)
-                {
-                    DebugWindow.LogError($"{nameof(IconsBuilder)} -> {ex}", 3);
-                }
+                var icon = GenerateIcon(entity);
+                if (icon == null) continue;
+
+                entity.SetHudComponent(icon);
             }
         }
 
