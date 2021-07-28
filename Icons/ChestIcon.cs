@@ -334,15 +334,10 @@ namespace IconsBuilder.Icons
 
                     break;
                 case ChestType.Fossil:
-                    Priority = IconPriority.Critical;
-                    MainTexture.Size = settings.SizeChestIcon;
-                    MainTexture.UV = SpriteHelper.GetUV(MyMapIconsIndex.Divination);
-                    var name = Entity.GetComponent<Render>().Name;
-                    Text = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
-                    MainTexture.Color = Color.Pink;
-                    if (FossilRarity.TryGetValue(Text, out var clr)) MainTexture.Color = clr;
-
-                    MainTexture.Color = MainTexture.Color;
+                     
+                    MainTexture.UV = SpriteHelper.GetUV(MyMapIconsIndex.Arcanist);
+                    MainTexture.Color = Color.Orange;
+                    Text = "aaaaaaaaaaaa";
                     break;
                 case ChestType.Perandus:
                     MainTexture.Size = settings.SizeChestIcon;
